@@ -52,8 +52,14 @@ root/
    npm install
    cd ../server
    npm install
-3. Start backend server: node server/index.js
-4. npm start --prefix client
+3. Start backend server:
+   ```bash
+   node server/index.js
+4. Start react app
+   ```bash
+   npm start --prefix client
+
+After this, the application will be available at http://localhost:3000/
 
 The SQLite database is stored at server/db/testdb.db and is used automatically.
 
@@ -86,7 +92,7 @@ I think that I will need to improve some aspects and also add some features to m
 
 ## Technical solutions
 
-- Instead of converting to a list, the response on the backend was compiled into a JSON file in the database.
+- Instead of converting to a list on the backend, the response was compiled into a JSON file in the database.
 
 - URL conversion has been added to allow the use of "search" parameters (and in the future, "auth", "hash" and others)
 
