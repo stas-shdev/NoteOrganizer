@@ -41,6 +41,7 @@ root/
 │
 ├── .gitignore
 └── README.md
+```
 
 ---
 
