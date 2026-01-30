@@ -1,6 +1,6 @@
-# Fullstack Todo App
+# Fullstack NoteOrganizer App
 
-A full-stack todo application built with React and Node.js.  
+A full-stack NoteOrganizer application built with React and Node.js.  
 The app allows creating and managing posts organized in groups, with features like search and sorting.
 
 ---
