@@ -77,6 +77,7 @@ function App() {
     editId.current = '';
     editGroup.current = '';
     setPosts(postGroupEdit);
+    setEditFlag("none");
     fetch('http://localhost:5000/posts',{
       method: "PUT",
       body: JSON.stringify({
