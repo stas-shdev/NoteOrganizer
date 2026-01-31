@@ -1,0 +1,16 @@
+.loadingSign{
+  width: 100px;
+  height:100px;
+  border: 4px dotted white;
+  background-color: transparent;
+  border-radius: 50%;
+  animation: loadingAnimation infinite 2s;
+}
+@keyframes loadingAnimation {
+  0%{
+    transform: rotate(0deg) scale(0.5);
+  }
+  100%{
+    transform: rotate(360deg) scale(1);
+  }
+}

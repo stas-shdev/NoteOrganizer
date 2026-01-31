@@ -8,12 +8,18 @@ import PostSortSearch from "./components/PostSortSearch";
 import MyModalWindow from "./components/UI/ModalWindow.jsx/MyModalWindow";
 import MyInput from "./components/UI/MyInput/MyInput";
 import PostGroups from "./components/PostGroups";
+import useFetching from "./useFetching";
 import { v4 as uuidv4 } from 'uuid'
 
 function App() {
   const [posts, setPosts] = useState([]);
-  // useEffect(() => { fetch('http://localhost:5000/postsAll').then(res => res.json() ?? []).then(data => { setPosts(data); console.log('succes on loading posts') }).catch(err => { console.log("err"); setPosts([]) }) }, [])
-  useEffect(() => { fetch('http://localhost:5000/posts').then(res => res.json() ?? []).then(data => { setPosts(data); console.log('succes on loading posts') }).catch(err => { console.log("err"); setPosts([]) }) }, [])
+
+  const getAll=async (end)=>{
+    await fetch('http://localhost:5000/posts').then(result=>result.json()??[]).then(takenPosts=>{setPosts(takenPosts)}).catch(err=>{throw new Error(err)});
+    end()
+  }
+  const [getAllPosts,isLoadingPosts,errorPosts,completeLoading]=useFetching(()=>{getAll(completeLoading)})
+  useEffect(getAllPosts,[])
 
   const [flag, setStateFlag] = useState("none");
 
@@ -46,7 +52,6 @@ function App() {
     const CopyOfPosts = [...posts]
     CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts = CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts.filter((post) => post.id !== idForDelete)
     setPosts(CopyOfPosts)
-    console.log(`http://localhost:5000/postsDel?id=${idForDelete}`)
     fetch(`http://localhost:5000/posts?id=${idForDelete}`,{
       method: "DELETE"
     }).then(res=>{console.log(res.ok)})
@@ -71,7 +76,7 @@ function App() {
     const idEdit=editId.current;
     const groupIdEdit=editGroup.current;
     const postGroupEdit = [...posts];
-    const EditedPosts = postGroupEdit[postGroupEdit.findIndex(group => group.group_id == groupIdEdit)].posts
+    const EditedPosts = postGroupEdit[postGroupEdit.findIndex(group => group.group_id === groupIdEdit)].posts
     const neededResult = { "id": idEdit, "title": editTitle, "body": editBody }
     EditedPosts[EditedPosts.findIndex(post => post.id === idEdit)] = neededResult;
     editId.current = '';
@@ -125,8 +130,8 @@ function App() {
         stateSort={stateSort}
         setStateSort={setStateSort}
         optionsForSort={[
-          { title: "Названию", value: "title" },
-          { title: "Описанию", value: "body" }
+          { title: "Sort by: title", value: "title" },
+          { title: "Sort by: description", value: "body" }
         ]}
         searchValue={search}
         searchFunction={(e) => { setSearch(e.target.value) }} />
@@ -135,7 +140,9 @@ function App() {
         postGroups={searchedSortedPosts}
         deleteFunc={(givenId, givenGroup) => { deletePost(givenId, givenGroup) }}
         editFunc={(idForEdit, indexGroup, title, body) => { editPost(idForEdit, indexGroup, title, body) }}
-        createPost={(index) => { startCreateNewPost(index) }}>
+        createPost={(index) => { startCreateNewPost(index) }}
+        isLoads={isLoadingPosts}
+        completeLoading={completeLoading}>
       </PostGroups>
     </div>
   )
