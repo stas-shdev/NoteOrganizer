@@ -2,7 +2,7 @@ const Router=require('../framework/Router');
 const router=new Router();
 const db=require("../db.js")
 
-router.post('/posts', (req, res) => {
+router.post('/api/posts', (req, res) => {
   const body = req.body
   console.log(req.body)
   const serverId = crypto.randomUUID()
@@ -13,14 +13,14 @@ router.post('/posts', (req, res) => {
   res.end(JSON.stringify({ status: 'succes', serverId: serverId }))
 })
 
-router.delete('/posts', (req, res) => {
+router.delete('/api/posts', (req, res) => {
   const idDel = req.query.id
   console.log(idDel)
   db.run('DELETE FROM posts WHERE id = ?;', idDel, function (err) {
     if (err) { console.error(err.message); res.end(err.message) } else { console.log('it is ok'); res.end(`post[${idDel}] was removed`) }
   })
 })
-router.get('/posts', (req, res) => {
+router.get('/api/posts', (req, res) => {
   db.get(`select json_group_array(json(readyJSONobject)) as 'readyJSON' from (select json_object(
 	'group_id',groups.id,
 	'group_title',groups.title,
@@ -38,7 +38,7 @@ group by groups.id);`, [], (err, row) => {
   })
 })
 
-router.put('/posts', (req, res) => {
+router.put('/api/posts', (req, res) => {
   const changedPostId=req.body.id;
   const newName=req.body.title;
   const newParagraph = req.body.body;

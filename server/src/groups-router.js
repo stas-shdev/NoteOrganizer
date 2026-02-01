@@ -2,7 +2,7 @@ const Router = require('../framework/Router.js')
 const router = new Router()
 const db = require('../db.js')
 
-router.post('/group', (req, res) => {
+router.post('/api/group', (req, res) => {
   const serverId = crypto.randomUUID()
   let body = req.body
   const givenGroup = body;

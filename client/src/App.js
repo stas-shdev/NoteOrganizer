@@ -15,7 +15,7 @@ function App() {
   const [posts, setPosts] = useState([]);
 
   const getAll=async (end)=>{
-    await fetch('http://localhost:5000/posts').then(result=>result.json()??[]).then(takenPosts=>{setPosts(takenPosts)}).catch(err=>{throw new Error(err)});
+    await fetch(`${process.env.REACT_APP_API_URL}/posts`).then(result=>result.json()??[]).then(takenPosts=>{setPosts(takenPosts)}).catch(err=>{throw new Error(err)});
     end()
   }
   const [getAllPosts,isLoadingPosts,errorPosts,completeLoading]=useFetching(()=>{getAll(completeLoading)})
@@ -36,7 +36,7 @@ function App() {
   }
   const createNewPost = async (name, paragraph, groupForPaste) => {
     // let TakenId = null
-    await fetch('http://localhost:5000/posts', {
+    await fetch(`${process.env.REACT_APP_API_URL}/posts`, {
       method: 'POST',
       body: JSON.stringify({ title: name, body: paragraph, group: groupForPaste })
     }).then(res => res.json()).then(data => {
@@ -52,7 +52,7 @@ function App() {
     const CopyOfPosts = [...posts]
     CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts = CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts.filter((post) => post.id !== idForDelete)
     setPosts(CopyOfPosts)
-    fetch(`http://localhost:5000/posts?id=${idForDelete}`,{
+    fetch(`${process.env.REACT_APP_API_URL}/posts?id=${idForDelete}`,{
       method: "DELETE"
     }).then(res=>{console.log(res.ok)})
   };
@@ -83,7 +83,7 @@ function App() {
     editGroup.current = '';
     setPosts(postGroupEdit);
     setEditFlag("none");
-    fetch('http://localhost:5000/posts',{
+    fetch(`${process.env.REACT_APP_API_URL}/posts`,{
       method: "PUT",
       body: JSON.stringify({
         id:idEdit,
@@ -96,7 +96,7 @@ function App() {
   const [groupTitle, setGroupTitle] = useState('')
 
   const createNewGroup = async () => {
-    await fetch('http://localhost:5000/group', {
+    await fetch(`${process.env.REACT_APP_API_URL}/group`, {
       method: 'POST',
       body: JSON.stringify({ titlePostList: groupTitle })
     }).then(res => res.json())
