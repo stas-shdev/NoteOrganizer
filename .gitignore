@@ -1,16 +1,16 @@
 # ===== Node.js / Backend =====
-/server/node_modules/
-/server/dist/
-/server/.env
-/server/*.log
-/server/package-lock.json
+/backend/server/node_modules/
+/backend/server/dist/
+/backend/server/.env
+/backend/server/*.log
+/backend/server/package-lock.json
 
 # ===== React / Frontend =====
-/client/node_modules/
-/client/build/
-/client/.env
-/client/*.log
-/client/package-lock.json
+/frontend/client/node_modules/
+/frontend/client/build/
+/frontend/client/.env
+/frontend/client/*.log
+/frontend/client/package-lock.json
 
 # ===== Database =====
 # *.sqlite3 
@@ -34,3 +34,4 @@ yarn-error.log*
 
 # ===== Optional =====
 /coverage/
+/package.json
