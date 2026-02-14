@@ -63,6 +63,6 @@ module.exports = class Application {
   }
 
   listen(port, callback) {
-    this.server.listen(port, callback)
+    this.server.listen(port,"0.0.0.0", callback)
   }
 }
