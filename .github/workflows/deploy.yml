@@ -4,6 +4,7 @@ on: [ push ]
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: deploy
     steps:
     - name: login
       run: echo ${{secrets.DOCKER_PASSWORD}} | docker login -u ${{secrets.DOCKER_USER}} --password-stdin
@@ -24,6 +25,7 @@ jobs:
     
   deploy:
     runs-on: ubuntu-latest
+    environment: deploy
     needs: build
     steps:
     - uses: appleboy/ssh-action@master
