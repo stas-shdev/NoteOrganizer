@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   backend:
-    build: ./backend
+    image: stasshdev/noteorganizer-backend
     container_name: backend
     working_dir: /backend
     command: node server/index.js
@@ -11,7 +11,7 @@ services:
   
 
   frontend:
-    build: ./frontend
+    image: stasshdev/noteorganizer-frontend
     container_name: frontend
     ports:
       - "80:80"
