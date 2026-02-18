@@ -56,6 +56,15 @@ function App() {
       method: "DELETE"
     }).then(res=>{console.log(res.ok)})
   };
+  
+  const deleteGroup = (idForDelete) => {
+    const copyOfPosts = [...posts]
+    copyOfPosts.splice(copyOfPosts.findIndex(elem=>elem.group_id==idForDelete),1)
+    setPosts(copyOfPosts)
+    fetch(`${process.env.REACT_APP_API_URL}/group?id=${idForDelete}`,{
+      method: "DELETE"
+    }).then(res=>{console.log(res.ok)})
+  }
 
   const [editTitle, setEditTitle] = useState('');
   const [editBody, setEditBody] = useState('');
@@ -106,6 +115,32 @@ function App() {
     setGroupTitle("")
   }
 
+  const [editTitleGroup, setEditTitleGroup] = useState('');
+  const editGroupId = useRef('')
+  const [groupEditFlag, setGroupEditFlag]=useState("none")
+
+  const startEditGroup = (groupId, title) => {
+    setGroupEditFlag("flex");
+    editGroupId.current = groupId;
+    setEditTitleGroup(title)
+  };
+  const completeEditGroup = () => {
+    const edittedGroup=editGroupId.current;
+    const postGroupEdit = [...posts];
+    postGroupEdit[postGroupEdit.findIndex(group => group.group_id === edittedGroup)].group_title = editTitleGroup
+    setPosts(postGroupEdit);
+    editId.current = '';
+    editGroup.current = '';
+    setGroupEditFlag("none");
+    fetch(`${process.env.REACT_APP_API_URL}/group`,{
+      method: "PUT",
+      body: JSON.stringify({
+        group_id:edittedGroup,
+        group_title:editTitleGroup,
+      })
+    })
+  }
+
   return (
     <div className="App">
       <MyModalWindow flag={flag} setFlag={(flag) => { setStateFlag(flag) }}>
@@ -123,6 +158,11 @@ function App() {
         <MyButton onClick={createNewGroup}>Create group</MyButton>
       </MyModalWindow>
 
+      <MyModalWindow flag={groupEditFlag} setEditFlag={(flag)=>{setGroupEditFlag(flag)}}>
+        <MyInput value={editTitleGroup} onChange={(e)=>{ setEditTitleGroup(e.target.value)}}></MyInput>
+        <MyButton onClick={completeEditGroup}>Change title of group</MyButton>
+      </MyModalWindow>
+
       <MyButton onClick={() => { setCreateGroupFlag("flex") }}>Create New Group</MyButton>
 
       <PostSortSearch
@@ -138,8 +178,10 @@ function App() {
 
       <PostGroups
         postGroups={searchedSortedPosts}
+        deleteGroup={(id)=>{deleteGroup(id)}}
         deleteFunc={(givenId, givenGroup) => { deletePost(givenId, givenGroup) }}
         editFunc={(idForEdit, indexGroup, title, body) => { editPost(idForEdit, indexGroup, title, body) }}
+        editGroupFunc={(id,title)=>{startEditGroup(id,title)}}
         createPost={(index) => { startCreateNewPost(index) }}
         isLoads={isLoadingPosts}
         completeLoading={completeLoading}>

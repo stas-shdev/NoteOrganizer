@@ -2,7 +2,7 @@ import React from 'react'
 import PostItem from './PostItem'
 import MyButton from './UI/MyButton/MyButton'
 import {v4 as uuidv4} from 'uuid'
-const PostList = ({ title, posts, deleteFunc ,editFunc, indexGroup, createPost}) => {
+const PostList = ({ title, posts, deleteFunc ,editFunc, indexGroup, createPost,deleteGroup, editGroup}) => {
   return (
     <div>
       {posts.length!==0
@@ -12,6 +12,8 @@ const PostList = ({ title, posts, deleteFunc ,editFunc, indexGroup, createPost})
         </div>
         : <h1>Here is no post exist in {title}</h1>
       }
+      <MyButton onClick={()=>{deleteGroup(indexGroup)}}>Delete Group</MyButton>
+      <MyButton onClick={()=>{editGroup(indexGroup,title)}}>Edit Title</MyButton>
       <MyButton onClick={()=>{createPost(indexGroup)}}>Add Post</MyButton>
     </div>
   )
