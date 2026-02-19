@@ -1,0 +1,23 @@
+.buttonBox{
+
+}
+.groupPanel{
+  /* display: flex; */
+  /* align-items: center; */
+  /* justify-content: space-around;
+  flex-direction: column; */
+  /* margin: 0 0 5px; */
+  text-align:center;
+}
+.groupInfo{
+  margin: 5px auto;
+}
+.buttonBox{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+.buttonBox *{
+  width:100%;
+  margin: 0 15px;
+}

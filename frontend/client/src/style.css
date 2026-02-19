@@ -38,9 +38,6 @@ html{
 .post-Content{
   overflow: hidden;
 }
-.NameOfPostList{
-  text-align: var(--main-text-style);
-}
 .PostForm {
   display: flex;
   justify-content: space-between;
