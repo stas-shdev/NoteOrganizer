@@ -153,7 +153,7 @@ function App() {
         <MyButton onClick={completeEditPost}>Safe Changes</MyButton>
       </MyModalWindow>
 
-      <MyModalWindow flag={createGroupFlag} setFlag={setCreateGroupFlag}>
+      <MyModalWindow flag={createGroupFlag} setFlag={(flag)=>{setCreateGroupFlag(flag)}}>
         <MyInput value={groupTitle} onChange={(e) => { setGroupTitle(e.target.value) }}></MyInput>
         <MyButton onClick={createNewGroup}>Create group</MyButton>
       </MyModalWindow>
