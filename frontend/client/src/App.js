@@ -158,7 +158,7 @@ function App() {
         <MyButton onClick={createNewGroup}>Create group</MyButton>
       </MyModalWindow>
 
-      <MyModalWindow flag={groupEditFlag} setEditFlag={(flag)=>{setGroupEditFlag(flag)}}>
+      <MyModalWindow flag={groupEditFlag} setFlag={(flag)=>{setGroupEditFlag(flag)}}>
         <MyInput value={editTitleGroup} onChange={(e)=>{ setEditTitleGroup(e.target.value)}}></MyInput>
         <MyButton onClick={completeEditGroup}>Change title of group</MyButton>
       </MyModalWindow>
