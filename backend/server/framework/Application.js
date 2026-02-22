@@ -13,6 +13,15 @@ module.exports = class Application {
   use(...middleware) {
     this.middlewares.push(...middleware)
   }
+  useFor(methods, path, middleware) {
+    this.use((req,res,next)=>{
+      if (methods.includes(req.method) && path==req.path) {
+        middleware(req,res,next)
+      } else {
+        next()
+      }
+    })
+  }
 
   addRouter(router) {
     Object.keys(router.endpoints).forEach(path => {
