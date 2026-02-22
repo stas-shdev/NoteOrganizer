@@ -10,12 +10,19 @@ import MyInput from "./components/UI/MyInput/MyInput";
 import PostGroups from "./components/PostGroups";
 import useFetching from "./useFetching";
 import { v4 as uuidv4 } from 'uuid'
+import axios from "axios"
 
 function App() {
+  const api=axios.create({
+    baseURL: process.env.REACT_APP_API_URL
+  })
+
   const [posts, setPosts] = useState([]);
 
   const getAll=async (end)=>{
-    await fetch(`${process.env.REACT_APP_API_URL}/posts`).then(result=>result.json()??[]).then(takenPosts=>{setPosts(takenPosts)}).catch(err=>{throw new Error(err)});
+    await api.get(`/posts`)
+      .then(response=>{setPosts(response.data)})
+      .catch(err=>{throw new Error(err)});
     end()
   }
   const [getAllPosts,isLoadingPosts,errorPosts,completeLoading]=useFetching(()=>{getAll(completeLoading)})
@@ -36,13 +43,12 @@ function App() {
   }
   const createNewPost = async (name, paragraph, groupForPaste) => {
     // let TakenId = null
-    await fetch(`${process.env.REACT_APP_API_URL}/posts`, {
-      method: 'POST',
-      body: JSON.stringify({ title: name, body: paragraph, group: groupForPaste })
-    }).then(res => res.json()).then(data => {
-      const CopyOfPosts = [...posts]
-      CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupForPaste)].posts = [...CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupForPaste)].posts, { id: data['serverId'], title: name, body: paragraph }];
-      setPosts(CopyOfPosts);
+    await api.post(`/posts`, {title: name, body: paragraph, group: groupForPaste })
+      .then(response => response.data)
+      .then(data => {
+        const CopyOfPosts = [...posts]
+        CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupForPaste)].posts = [...CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupForPaste)].posts, { id: data['serverId'], title: name, body: paragraph }];
+        setPosts(CopyOfPosts);
     })
     //to change
     setStateFlag("none")
@@ -52,18 +58,16 @@ function App() {
     const CopyOfPosts = [...posts]
     CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts = CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts.filter((post) => post.id !== idForDelete)
     setPosts(CopyOfPosts)
-    fetch(`${process.env.REACT_APP_API_URL}/posts?id=${idForDelete}`,{
-      method: "DELETE"
-    }).then(res=>{console.log(res.ok)})
+    api.delete(`/posts?id=${idForDelete}`)
+      .then(res=>{console.log(res.ok)})
   };
   
   const deleteGroup = (idForDelete) => {
     const copyOfPosts = [...posts]
     copyOfPosts.splice(copyOfPosts.findIndex(elem=>elem.group_id==idForDelete),1)
     setPosts(copyOfPosts)
-    fetch(`${process.env.REACT_APP_API_URL}/group?id=${idForDelete}`,{
-      method: "DELETE"
-    }).then(res=>{console.log(res.ok)})
+    api.delete(`/group?id=${idForDelete}`)
+      .then(res=>{console.log(res.ok)})
   }
 
   const [editTitle, setEditTitle] = useState('');
@@ -92,23 +96,14 @@ function App() {
     editGroup.current = '';
     setPosts(postGroupEdit);
     setEditFlag("none");
-    fetch(`${process.env.REACT_APP_API_URL}/posts`,{
-      method: "PUT",
-      body: JSON.stringify({
-        id:idEdit,
-        title:editTitle,
-        body: editBody
-      })
-    })
+    api.put(`/posts`,{id:idEdit,title:editTitle,body: editBody})
   }
   const [createGroupFlag, setCreateGroupFlag] = useState('none')
   const [groupTitle, setGroupTitle] = useState('')
 
   const createNewGroup = async () => {
-    await fetch(`${process.env.REACT_APP_API_URL}/group`, {
-      method: 'POST',
-      body: JSON.stringify({ titlePostList: groupTitle })
-    }).then(res => res.json())
+    await api.post(`/group`,{ titlePostList: groupTitle })
+      .then(res => res.data)
       .then(data => { setPosts([...posts, { group_id: data['AnswerId'], group_title: groupTitle, posts: [] }]); console.log(data) })
       .catch(err => { console.log(err) })
     setCreateGroupFlag('none')
@@ -132,13 +127,7 @@ function App() {
     editId.current = '';
     editGroup.current = '';
     setGroupEditFlag("none");
-    fetch(`${process.env.REACT_APP_API_URL}/group`,{
-      method: "PUT",
-      body: JSON.stringify({
-        group_id:edittedGroup,
-        group_title:editTitleGroup,
-      })
-    })
+    api.put(`/group`,{ group_id:edittedGroup, group_title:editTitleGroup,})
   }
 
   return (
