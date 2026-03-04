@@ -2,16 +2,19 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import HomePage from './HomePage'
-import {BrowserRouter, Routes, Route} from "react-router-dom";
+import AuthProvider from './AuthProvider.js'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <BrowserRouter>
-    <Routes>
-      <Route path={"/App"} element={<App />}/>
-      <Route path={"/"} element={<HomePage/>}/>
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path={"/App"} element={<App key="App"/>} />
+        <Route path={"/"} element={<HomePage key="Home"/>} />
+      </Routes>
+    </AuthProvider>
   </BrowserRouter>
 );
 

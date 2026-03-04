@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import "./style.css";
 import "./styles/fonts.css"
 import MyButton from "./components/UI/MyButton/MyButton";
@@ -11,22 +11,50 @@ import PostGroups from "./components/PostGroups";
 import useFetching from "./useFetching";
 import { v4 as uuidv4 } from 'uuid'
 import axios from "axios"
+import { useAuth } from "./AuthProvider";
+import { useNavigate, Navigate } from "react-router-dom";
 
 function App() {
-  const api=axios.create({
-    baseURL: process.env.REACT_APP_API_URL
+  const navigate = useNavigate()
+  const { Auth } = useAuth()
+  const api = axios.create({
+    headers: { "Authorization": 'Bearer ' + Auth.current },
+    baseURL: process.env.REACT_APP_API_URL,
+    withCredentials: true
   })
-
+  // const [IsNeedRedirect,setIsNeedRedirect]=useState(false)
+  // useEffect(()=>{setIsNeedRedirect(isAuthorized())},[])
+  api.interceptors.request.use((config) => {
+    config.headers["Authorization"] = 'Bearer ' + Auth.current
+    return config
+  })
+  api.interceptors.response.use(
+    response => response,
+    async (error) => {
+      const originalRequest = error.config
+      if (error.response.status === 401 && !originalRequest.retrying) {
+        originalRequest.retrying = true
+        await api.post("/refresh").then(response => response.data).then(data => { Auth.current = data }).catch(err => { throw new Error(err) })
+        api.defaults.headers.common["Authorization"] = 'Bearer ' + Auth.current
+        originalRequest.headers["Authorization"] = 'Bearer ' + Auth.current
+        return api(originalRequest)
+      } else if (error.response.status === 401 && originalRequest.retrying) {navigate("/")}
+    })
   const [posts, setPosts] = useState([]);
+  // useEffect(() => { api.post("/refresh").then(response => response.data).then(data => { Auth.current = data }).catch(err => { throw new Error(err) }) }, [])
 
-  const getAll=async (end)=>{
-    await api.get(`/posts`)
-      .then(response=>{setPosts(response.data)})
-      .catch(err=>{throw new Error(err)});
-    end()
+  const getAll = async (end) => {
+    try {
+      const res = await api.get("/posts")
+      console.log(res)
+      setPosts(res.data)
+      end()
+    } catch (err) {
+      console.log(err)
+    }
   }
-  const [getAllPosts,isLoadingPosts,errorPosts,completeLoading]=useFetching(()=>{getAll(completeLoading)})
-  useEffect(getAllPosts,[])
+  const [getAllPosts, isLoadingPosts, errorPosts, completeLoading] = useFetching(() => { getAll(()=>{}) })
+  useEffect(()=>{getAllPosts()}, [])
 
   const [flag, setStateFlag] = useState("none");
 
@@ -43,13 +71,13 @@ function App() {
   }
   const createNewPost = async (name, paragraph, groupForPaste) => {
     // let TakenId = null
-    await api.post(`/posts`, {title: name, body: paragraph, group: groupForPaste })
+    await api.post(`/posts`, { title: name, body: paragraph, group: groupForPaste })
       .then(response => response.data)
       .then(data => {
         const CopyOfPosts = [...posts]
         CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupForPaste)].posts = [...CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupForPaste)].posts, { id: data['serverId'], title: name, body: paragraph }];
         setPosts(CopyOfPosts);
-    })
+      })
     //to change
     setStateFlag("none")
   };
@@ -59,15 +87,15 @@ function App() {
     CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts = CopyOfPosts[CopyOfPosts.findIndex(group => group.group_id === groupOfDeleting)].posts.filter((post) => post.id !== idForDelete)
     setPosts(CopyOfPosts)
     api.delete(`/posts?id=${idForDelete}`)
-      .then(res=>{console.log(res.ok)})
+      .then(res => { console.log(res.ok) })
   };
-  
+
   const deleteGroup = (idForDelete) => {
     const copyOfPosts = [...posts]
-    copyOfPosts.splice(copyOfPosts.findIndex(elem=>elem.group_id==idForDelete),1)
+    copyOfPosts.splice(copyOfPosts.findIndex(elem => elem.group_id == idForDelete), 1)
     setPosts(copyOfPosts)
     api.delete(`/group?id=${idForDelete}`)
-      .then(res=>{console.log(res.ok)})
+      .then(res => { console.log(res.ok) })
   }
 
   const [editTitle, setEditTitle] = useState('');
@@ -86,8 +114,8 @@ function App() {
     setEditBody(body)
   };
   const completeEditPost = () => {
-    const idEdit=editId.current;
-    const groupIdEdit=editGroup.current;
+    const idEdit = editId.current;
+    const groupIdEdit = editGroup.current;
     const postGroupEdit = [...posts];
     const EditedPosts = postGroupEdit[postGroupEdit.findIndex(group => group.group_id === groupIdEdit)].posts
     const neededResult = { "id": idEdit, "title": editTitle, "body": editBody }
@@ -96,13 +124,13 @@ function App() {
     editGroup.current = '';
     setPosts(postGroupEdit);
     setEditFlag("none");
-    api.put(`/posts`,{id:idEdit,title:editTitle,body: editBody})
+    api.put(`/posts`, { id: idEdit, title: editTitle, body: editBody })
   }
   const [createGroupFlag, setCreateGroupFlag] = useState('none')
   const [groupTitle, setGroupTitle] = useState('')
 
   const createNewGroup = async () => {
-    await api.post(`/group`,{ titlePostList: groupTitle })
+    await api.post(`/group`, { titlePostList: groupTitle })
       .then(res => res.data)
       .then(data => { setPosts([...posts, { group_id: data['AnswerId'], group_title: groupTitle, posts: [] }]); console.log(data) })
       .catch(err => { console.log(err) })
@@ -112,7 +140,7 @@ function App() {
 
   const [editTitleGroup, setEditTitleGroup] = useState('');
   const editGroupId = useRef('')
-  const [groupEditFlag, setGroupEditFlag]=useState("none")
+  const [groupEditFlag, setGroupEditFlag] = useState("none")
 
   const startEditGroup = (groupId, title) => {
     setGroupEditFlag("flex");
@@ -120,14 +148,14 @@ function App() {
     setEditTitleGroup(title)
   };
   const completeEditGroup = () => {
-    const edittedGroup=editGroupId.current;
+    const edittedGroup = editGroupId.current;
     const postGroupEdit = [...posts];
     postGroupEdit[postGroupEdit.findIndex(group => group.group_id === edittedGroup)].group_title = editTitleGroup
     setPosts(postGroupEdit);
     editId.current = '';
     editGroup.current = '';
     setGroupEditFlag("none");
-    api.put(`/group`,{ group_id:edittedGroup, group_title:editTitleGroup,})
+    api.put(`/group`, { group_id: edittedGroup, group_title: editTitleGroup, })
   }
 
   return (
@@ -142,13 +170,13 @@ function App() {
         <MyButton onClick={completeEditPost}>Safe Changes</MyButton>
       </MyModalWindow>
 
-      <MyModalWindow flag={createGroupFlag} setFlag={(flag)=>{setCreateGroupFlag(flag)}}>
+      <MyModalWindow flag={createGroupFlag} setFlag={(flag) => { setCreateGroupFlag(flag) }}>
         <MyInput value={groupTitle} onChange={(e) => { setGroupTitle(e.target.value) }}></MyInput>
         <MyButton onClick={createNewGroup}>Create group</MyButton>
       </MyModalWindow>
 
-      <MyModalWindow flag={groupEditFlag} setFlag={(flag)=>{setGroupEditFlag(flag)}}>
-        <MyInput value={editTitleGroup} onChange={(e)=>{ setEditTitleGroup(e.target.value)}}></MyInput>
+      <MyModalWindow flag={groupEditFlag} setFlag={(flag) => { setGroupEditFlag(flag) }}>
+        <MyInput value={editTitleGroup} onChange={(e) => { setEditTitleGroup(e.target.value) }}></MyInput>
         <MyButton onClick={completeEditGroup}>Change title of group</MyButton>
       </MyModalWindow>
 
@@ -167,10 +195,10 @@ function App() {
 
       <PostGroups
         postGroups={searchedSortedPosts}
-        deleteGroup={(id)=>{deleteGroup(id)}}
+        deleteGroup={(id) => { deleteGroup(id) }}
         deleteFunc={(givenId, givenGroup) => { deletePost(givenId, givenGroup) }}
         editFunc={(idForEdit, indexGroup, title, body) => { editPost(idForEdit, indexGroup, title, body) }}
-        editGroupFunc={(id,title)=>{startEditGroup(id,title)}}
+        editGroupFunc={(id, title) => { startEditGroup(id, title) }}
         createPost={(index) => { startCreateNewPost(index) }}
         isLoads={isLoadingPosts}
         completeLoading={completeLoading}>

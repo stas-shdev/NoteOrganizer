@@ -10,8 +10,6 @@ const useFetching = (callback) => {
       return await callback()
     } catch (err) {
       setError(err.message)
-    } finally {
-      // setLoading(false)
     }
   }; return [fetching, isLoading, error, () => { setLoading(false) }]
 }

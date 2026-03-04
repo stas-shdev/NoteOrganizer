@@ -4,6 +4,7 @@
 /backend/server/.env
 /backend/server/*.log
 /backend/server/package-lock.json
+/backend/server/.env
 
 # ===== React / Frontend =====
 /frontend/client/node_modules/

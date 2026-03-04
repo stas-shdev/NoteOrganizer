@@ -3,6 +3,8 @@ version: "3.3"
 services:
   backend:
     image: stasshdev/noteorganizer-backend
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
     container_name: backend
     working_dir: /backend
     command: node server/index.js
