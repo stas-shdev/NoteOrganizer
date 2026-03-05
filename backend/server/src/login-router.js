@@ -42,7 +42,7 @@ const verifyToken = (token) => {
 router.post("/login", (req, res) => {
   db.get("SELECT password, id FROM logins WHERE logins.username = ?;", [req.body.username],async (err, row) => {
     if (argon2.verify(row.password, req.body.password)) {
-      res.setHeader('Set-Cookie', `login=${createToken({ userId: row.id, type: "refresh" }, '1h')}; HttpOnly; Max-Age=86400; Path=/; SameSite=None; Secure`);
+      res.setHeader('Set-Cookie', `login=${createToken({ userId: row.id, type: "refresh" }, '1h')}; HttpOnly; Max-Age=86400; Path=/; `);
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.send({ succes: true })
       console.log(await argon2.hash(req.body.password,12))
