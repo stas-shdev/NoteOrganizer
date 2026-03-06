@@ -3,7 +3,7 @@ const router = new Router()
 const db = require('../db.js')
 const crypto = require("crypto")
 const jwt = require('jsonwebtoken')
-const argon2=require('argon2')
+const argon2 = require('argon2')
 require('dotenv').config()
 
 const checkIsNameValid = (username) => {
@@ -39,25 +39,39 @@ const createToken = (body, expireTime) => {
 const verifyToken = (token) => {
   return jwt.verify(token, process.env.JWT_SECRET)
 }
-router.post("/login", (req, res) => {
-  db.get("SELECT password, id FROM logins WHERE logins.username = ?;", [req.body.username],async (err, row) => {
-    if (argon2.verify(row.password, req.body.password)) {
-      res.setHeader('Set-Cookie', `login=${createToken({ userId: row.id, type: "refresh" }, '1h')}; HttpOnly; Max-Age=86400; Path=/; `);
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.send({ succes: true })
-      console.log(await argon2.hash(req.body.password,12))
-    } else {
-      res.send({ succes: false })
-      console.log(await argon2.hash(req.body.password,12))
-    }
+const createCookie = (res, key, value, MaxAge) => {
+  res.setHeader('Set-Cookie', `${key}=${value}; HttpOnly; Max-Age=${MaxAge}; Path=/;`);
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+}
+const login = (givenUsername, givenPassword) => {
+  return new Promise((resolve, reject) => {
+    db.get("SELECT password, id FROM logins WHERE logins.username = ?;", [givenUsername], async (err, row) => {
+      if (err) {
+        reject({ succes: false, message: err })
+      } else if (row && await argon2.verify(row.password, givenPassword)) {
+        resolve({ succes: true, userId: row.id })
+      } else {
+        reject({ succes: false, message: "Incorrect username or password" })
+      }
+    })
   })
+}
+router.post("/login", async (req, res) => {
+  try {
+    const loginResult = await login(req.body.username, req.body.password)
+    console.log(loginResult)
+    createCookie(res, "login", createToken({ userId: loginResult.userId, type: "refresh" }, "1h"), "3600")
+    res.send({ succes: loginResult.succes, message: "the user is logged in successfully" })
+  } catch (err) {
+    res.send(err)
+  }
+
 })
 router.post("/createAccount", async (req, res) => {
   const username = req.body.username
-  const password = await argon2.hash(req.body.password,12)
-  console.log(password)
   try {
     if (checkIsNameValid(username) && !await checkIsNameTaken(username)) {
+      const password = await argon2.hash(req.body.password,12)
       const result = await writeUserDB(username, password)
       res.send({ status: "succes", message: result })
     }
@@ -89,10 +103,10 @@ router.post("/refresh", (req, res) => {
       console.log("try to use access as refresh")
     }
   } catch (err) {
-    res.status=404
+    res.status = 404
     res.send(err)
   }
-  
+
 })
 
 module.exports = router
