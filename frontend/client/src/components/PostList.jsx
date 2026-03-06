@@ -14,7 +14,7 @@ const PostList = ({ title, posts, deleteFunc, editFunc, indexGroup, createPost, 
           </div>
           : <h1>Here is no post exist in {title}</h1>
         }
-        <div className={style.buttonBox}>
+        <div className={[style.buttonBox]}>
           <MyButton onClick={() => { createPost(indexGroup) }}>Add Post</MyButton>
           <MyButton onClick={() => { editGroup(indexGroup, title) }}>Edit Title</MyButton>
           <MyButton onClick={() => { deleteGroup(indexGroup) }}>Delete Group</MyButton>
