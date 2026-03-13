@@ -4,6 +4,7 @@ const db = require('../db.js')
 const crypto = require("crypto")
 const jwt = require('jsonwebtoken')
 const argon2 = require('argon2')
+const {createToken, verifyToken} = require('../utilities/jwtToken.js')
 require('dotenv').config()
 
 const checkIsNameValid = (username) => {
@@ -32,12 +33,6 @@ const writeUserDB = (username, password) => {
       if (err) { rej(err) } else { res(`Account ${username} was created`) }
     })
   })
-}
-const createToken = (body, expireTime) => {
-  return jwt.sign(body, process.env.JWT_SECRET, { expiresIn: expireTime })
-}
-const verifyToken = (token) => {
-  return jwt.verify(token, process.env.JWT_SECRET)
 }
 const createCookie = (res, key, value, MaxAge) => {
   res.setHeader('Set-Cookie', `${key}=${value}; HttpOnly; Max-Age=${MaxAge}; Path=/;`);

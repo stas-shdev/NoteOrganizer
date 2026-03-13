@@ -1,12 +1,12 @@
 import React,{useRef, useState,useContext} from 'react'
-import {BrowserRouter, Link, useNavigate} from "react-router-dom"
+import {BrowserRouter, Link, useNavigate, useSearchParams} from "react-router-dom"
 import MyModalWindow from "./components/UI/ModalWindow.jsx/MyModalWindow";
 import MyInput from './components/UI/MyInput/MyInput';
 import MyButton from './components/UI/MyButton/MyButton';
-import axios from "axios"
-import {useAuth} from './AuthProvider'
+import api from './api/api.js'
+import { setToken } from './api/tokenStore';
+
 const HomePage = () => {
-  const api=axios.create({baseURL: process.env.REACT_APP_API_URL, withCredentials: true})
   const [flag,setFlag]=useState("none")
   const [createdAccountFlag,setCreatedAccountFlag]=useState("none")
   const [username,setUsername]=useState("")
@@ -14,14 +14,20 @@ const HomePage = () => {
   const [usernameCreate,setUsernameCreate]=useState("")
   const [passwordCreate,setPasswordCreate]=useState("")
   const navigate=useNavigate()
-  const {Auth}=useAuth()
-  const logInRequest=(username,password)=>{
-    api.post("/login",{username:username,password:password})
-      .then(response => response.data)
-      .then(data=>{
-        if (data.succes===true) {api.post("/refresh").then(response=>response.data).then( data=>{Auth.current=data}).catch(err=>{throw new Error(err)});navigate('/App'); setFlag("none"); console.log(Auth)} else {console.log("password is incorrect or account dont existing")}
-      })
-      .catch(err=>{console.log(err)})
+
+  const [searchedParams]=useSearchParams()
+  const [loginState, setLoginState]=useState('')
+  const logInRequest=async (username,password)=>{
+    const loginResult=await api.post("/login",{username:username,password:password})
+    const loginData=loginResult.data
+    if (loginData.succes==true) {
+      const responseAuth=await api.post("/refresh");
+      setToken(responseAuth.data)
+      await api.post("/joingroup",{inviteToken: searchedParams.get("invite")});
+      navigate('/App'); 
+      setFlag("none");
+    }
+    else {setLoginState("password is incorrect or account dont existing")}
   }
   const createAccRequest=(username,password)=>{
     api.post("/createAccount",{username:username, password:password})
@@ -42,6 +48,7 @@ const HomePage = () => {
         <MyInput value={username} onChange={(e)=>{setUsername(e.target.value)}}></MyInput>
         <MyInput value={password} onChange={(e)=>{setPassword(e.target.value)}}></MyInput>
         <MyButton onClick={()=>{logInRequest(username,password)}}>Log In</MyButton>
+        <div style={{color: "red"}}>{loginState}</div>
       </MyModalWindow>
       <MyModalWindow setFlag={setCreatedAccountFlag} flag={createdAccountFlag}>
         <MyInput value={usernameCreate} onChange={(e)=>{setUsernameCreate(e.target.value);actualTimerId.current=e.target.value;createCheckTimer(e.target.value,1000)}}></MyInput>

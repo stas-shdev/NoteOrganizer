@@ -7,7 +7,7 @@ router.post('/posts', (req, res) => {
   console.log(req.body)
   const serverId = crypto.randomUUID()
   const givenPost = body;
-  db.run('INSERT INTO posts (id,title,paragraph,group_id) SELECT ?,?,?,? FROM groups WHERE groups.id=? AND groups.ownerId=?;', [serverId, givenPost['title'], givenPost['body'], givenPost['group'],givenPost['group'],req.user], err => {
+  db.run('INSERT INTO posts (id,title,paragraph,group_id) SELECT ?,?,?,? as insertedGroupId FROM groups WHERE groups.id=insertedGroupId AND exists(SELECT 1 from usersGroups where usersGroups.groupId=groups.id and usersGroups.userId=?);', [serverId, givenPost['title'], givenPost['body'], givenPost['group'],req.user], err => {
     if (err) { console.error(err.message); res.end(err.message) } else { console.log('it is ok'); }
   })
   res.end(JSON.stringify({ status: 'succes', serverId: serverId }))
@@ -16,7 +16,7 @@ router.post('/posts', (req, res) => {
 router.delete('/posts', (req, res) => {
   const idDel = req.query.id
   console.log(idDel)
-  db.run('DELETE FROM posts WHERE id = ? and exists(select 1 from groups where groups.ownerId=? and groups.id=posts.group_id);', [idDel,req.user], (err) => {
+  db.run('delete FROM posts WHERE id = ? and exists(select 1 from groups where groups.id=posts.group_id) and exists(select 1 from usersGroups where usersGroups.groupId=posts.group_id and usersGroups.userId=?);', [idDel,req.user], (err) => {
     if (err) { console.error(err.message); res.end(err.message) } else { console.log('it is ok'); res.end(`post[${idDel}] was removed`) }
   })
 })
@@ -33,7 +33,8 @@ router.get('/posts', (req, res) => {
 		)
 	) as readyJSONobject from groups
 left join posts on groups.id= posts.group_id
-where groups.ownerId=?
+left join usersGroups on groups.id=usersGroups.groupId
+where usersGroups.userId=?
 group by groups.id);`, [req.user], (err, row) => {
     if (err) { console.error(err) } else { res.end(row.readyJSON);}
   })
@@ -43,7 +44,7 @@ router.put('/posts', (req, res) => {
   const changedPostId=req.body.id;
   const newName=req.body.title;
   const newParagraph = req.body.body;
-  db.run("UPDATE posts SET (title,paragraph)=(?,?) WHERE posts.id=? AND EXISTS(SELECT 1 FROM groups WHERE groups.id=posts.group_id and groups.ownerId=?);",[newName,newParagraph,changedPostId,req.user],(err)=>{
+  db.run("UPDATE posts SET (title,paragraph)=(?,?) WHERE posts.id=? AND EXISTS(SELECT 1 FROM groups WHERE groups.id=posts.group_id) and exists(select 1 from usersGroups where usersGroups.groupId=posts.group_id and usersGroups.userId=?);",[newName,newParagraph,changedPostId,req.user],(err)=>{
     if (err) { console.error(err.message); res.end(err.message) } else {res.end(`post[${changedPostId}] was changed`) }
   })
 })

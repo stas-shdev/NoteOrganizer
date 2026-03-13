@@ -11,8 +11,8 @@
 
 .modalContent {
   background-color: var(--main-dark-color);
-  padding: 30px;
-  max-width: 800px;
+  padding: 60px;
+  width: 800px;
   border-radius: 20px;
   display: flex;
   flex-direction: column;

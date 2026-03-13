@@ -9,7 +9,7 @@ const loginRouter = require('./src/login-router.js');
 const cookieMiddleware = require('./framework/cookie-middleware.js');
 const sendMiddleware = require('./framework/send-middleware.js');
 const authMiddleware = require('./framework/auth-middleware.js');
-
+const inviterouter = require('./src/invite-router.js')
 const app = new Application()
 
 app.use(bodyMiddleware)
@@ -17,9 +17,12 @@ app.use(sendMiddleware)
 app.useFor(["POST"],"/refresh",cookieMiddleware)
 app.useFor(["GET","POST","PUT","DELETE"],"/posts",authMiddleware)
 app.useFor(["GET","POST","PUT","DELETE"],"/group",authMiddleware)
+app.useFor(["GET","POST","PUT","DELETE"],"/createInviteLink",authMiddleware)
+app.useFor(["GET","POST","PUT","DELETE"],"/joingroup",authMiddleware)
 app.addRouter(postsRouter)
 app.addRouter(groupsRouter)
 app.addRouter(loginRouter)
+app.addRouter(inviterouter)
 app.listen(5000, () => {
   console.log(`server started, http://localhost:${PORT}`)
 })

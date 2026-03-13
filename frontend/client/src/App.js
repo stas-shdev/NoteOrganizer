@@ -10,38 +10,14 @@ import MyInput from "./components/UI/MyInput/MyInput";
 import PostGroups from "./components/PostGroups";
 import useFetching from "./useFetching";
 import { v4 as uuidv4 } from 'uuid'
-import axios from "axios"
 import { useAuth } from "./AuthProvider";
 import { useNavigate, Navigate } from "react-router-dom";
+import api from './api/api.js'
+import {QRCodeCanvas} from "qrcode.react"
 
 function App() {
   const navigate = useNavigate()
-  const { Auth } = useAuth()
-  const api = axios.create({
-    headers: { "Authorization": 'Bearer ' + Auth.current },
-    baseURL: process.env.REACT_APP_API_URL,
-    withCredentials: true
-  })
-  // const [IsNeedRedirect,setIsNeedRedirect]=useState(false)
-  // useEffect(()=>{setIsNeedRedirect(isAuthorized())},[])
-  api.interceptors.request.use((config) => {
-    config.headers["Authorization"] = 'Bearer ' + Auth.current
-    return config
-  })
-  api.interceptors.response.use(
-    response => response,
-    async (error) => {
-      const originalRequest = error.config
-      if (error.response.status === 401 && !originalRequest.retrying) {
-        originalRequest.retrying = true
-        await api.post("/refresh").then(response => response.data).then(data => { Auth.current = data }).catch(err => { throw new Error(err) })
-        api.defaults.headers.common["Authorization"] = 'Bearer ' + Auth.current
-        originalRequest.headers["Authorization"] = 'Bearer ' + Auth.current
-        return api(originalRequest)
-      } else if (error.response.status === 401 && originalRequest.retrying) {navigate("/")}
-    })
   const [posts, setPosts] = useState([]);
-  // useEffect(() => { api.post("/refresh").then(response => response.data).then(data => { Auth.current = data }).catch(err => { throw new Error(err) }) }, [])
 
   const getAll = async (end) => {
     try {
@@ -50,6 +26,9 @@ function App() {
       setPosts(res.data)
       end()
     } catch (err) {
+      if (err.response.status==401) {
+        navigate("/")
+      }
       console.log(err)
     }
   }
@@ -157,7 +136,12 @@ function App() {
     setGroupEditFlag("none");
     api.put(`/group`, { group_id: edittedGroup, group_title: editTitleGroup, })
   }
-
+  const createInvite=async(groupId)=>{
+    const link = await api.post('/createInviteLink',{invitedGroupId: groupId})
+    setInviteLink(process.env.REACT_APP_INVITE_ADRESS+link.data.createdLink)
+  }
+  const [inviteLink, setInviteLink]= useState()
+  const [inviteFlag, setInviteFlag] = useState('none')
   return (
     <div className="App">
       <MyModalWindow flag={flag} setFlag={(flag) => { setStateFlag(flag) }}>
@@ -178,6 +162,14 @@ function App() {
       <MyModalWindow flag={groupEditFlag} setFlag={(flag) => { setGroupEditFlag(flag) }}>
         <MyInput value={editTitleGroup} onChange={(e) => { setEditTitleGroup(e.target.value) }}></MyInput>
         <MyButton onClick={completeEditGroup}>Change title of group</MyButton>
+      </MyModalWindow>
+
+      <MyModalWindow flag={inviteFlag} setFlag={(flag)=>{setInviteFlag(flag)}}>
+        <div style={{padding: "20px", backgroundColor: "white", borderRadius: "20px"}}>
+        <QRCodeCanvas value={inviteLink}/>
+        </div>
+        or
+        <MyButton onClick={()=>{navigator.clipboard.writeText(inviteLink)}}>click to copy link</MyButton>
       </MyModalWindow>
 
       <MyButton onClick={() => { setCreateGroupFlag("flex") }}>Create New Group</MyButton>
@@ -201,7 +193,8 @@ function App() {
         editGroupFunc={(id, title) => { startEditGroup(id, title) }}
         createPost={(index) => { startCreateNewPost(index) }}
         isLoads={isLoadingPosts}
-        completeLoading={completeLoading}>
+        completeLoading={completeLoading}
+        createInvite={(id)=>{setInviteFlag('flex');createInvite(id)}}>
       </PostGroups>
     </div>
   )
