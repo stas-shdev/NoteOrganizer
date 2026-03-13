@@ -43,7 +43,7 @@ const login = (givenUsername, givenPassword) => {
     db.get("SELECT password, id FROM logins WHERE logins.username = ?;", [givenUsername], async (err, row) => {
       if (err) {
         reject({ succes: false, message: err })
-      } else if (row && await argon2.verify(row.password, givenPassword)) {
+      } else if (row && await argon2.verify(row.password, givenPassword.trim())) {
         resolve({ succes: true, userId: row.id })
       } else {
         reject({ succes: false, message: "Incorrect username or password" })
@@ -66,7 +66,7 @@ router.post("/createAccount", async (req, res) => {
   const username = req.body.username
   try {
     if (checkIsNameValid(username) && !await checkIsNameTaken(username)) {
-      const password = await argon2.hash(req.body.password,12)
+      const password = await argon2.hash(req.body.password.trim(),12)
       const result = await writeUserDB(username, password)
       res.send({ status: "succes", message: result })
     }

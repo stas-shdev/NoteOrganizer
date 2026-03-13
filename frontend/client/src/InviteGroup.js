@@ -10,6 +10,7 @@ const InviteGroup = () => {
     try {
       const response = await api.post("/joingroup",{inviteToken: id})
       setStateInvite(response.data)
+      navigate('/App')
     } catch (err) {
       if (err.response.status===401) {
         navigate(`/?invite=${id}`)

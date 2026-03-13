@@ -9,15 +9,23 @@ router.post("/createInviteLink", (req, res) => {
       res.send({ createdLink: createToken({ groupId: invitedGroupId }, 300) })
     } else {
       res.statusCode(404)
-      res.send({message: 404})
+      res.send({ message: 404 })
     }
   })
 })
 router.post("/joingroup", (req, res) => {
   try {
     const groupId = verifyToken(req.body.inviteToken).groupId
-    db.run('INSERT INTO usersGroups (userId, groupId) VALUES (?,?)', [req.user, groupId])
-    res.send("fine")
+    db.get('select 1 as result from usersGroups where userId=? and groupId=?', [req.user, groupId], (err, row) => {
+      if (!row) {
+        db.run('INSERT INTO usersGroups (userId, groupId) VALUES (?,?)', [req.user, groupId])
+        res.send("fine")
+      } else {
+        res.send('you are already in this group!')
+        console.log(334)
+      }
+    })
+
   } catch (err) {
     res.send(err)
   }

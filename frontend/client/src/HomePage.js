@@ -45,16 +45,25 @@ const HomePage = () => {
   return (
     <div style={{"text-align": "center"}}>
       <MyModalWindow setFlag={setFlag} flag={flag}>
-        <MyInput value={username} onChange={(e)=>{setUsername(e.target.value)}}></MyInput>
-        <MyInput value={password} onChange={(e)=>{setPassword(e.target.value)}}></MyInput>
-        <MyButton onClick={()=>{logInRequest(username,password)}}>Log In</MyButton>
-        <div style={{color: "red"}}>{loginState}</div>
+        <form onSubmit={(e)=>{e.preventDefault()}}>
+          <MyInput value={username} onChange={(e)=>{setUsername(e.target.value)}} name={"username"} autoComplete={"username"} placeholder={"Username"}></MyInput>
+          <MyInput value={password} onChange={(e)=>{setPassword(e.target.value)}} name={"password"} type={"password"} autoComplete={'current-password'} placeholder={"Password"}></MyInput>
+          <MyButton type={"submit"} onClick={()=>{logInRequest(username,password);setUsername('');setPassword('')}}>Log In</MyButton>
+          <div style={{color: "red"}}>{loginState}</div>
+        </form>
       </MyModalWindow>
       <MyModalWindow setFlag={setCreatedAccountFlag} flag={createdAccountFlag}>
-        <MyInput value={usernameCreate} onChange={(e)=>{setUsernameCreate(e.target.value);actualTimerId.current=e.target.value;createCheckTimer(e.target.value,1000)}}></MyInput>
-        <div style={usernameData.isUsable? {"color":"green"}: {"color": "red"}}>{usernameData.message}</div>
-        <MyInput value={passwordCreate} onChange={(e)=>{setPasswordCreate(e.target.value)}}></MyInput>
-        <MyButton onClick={async ()=>{await createAccRequest(usernameCreate,passwordCreate)}}>CreateAccount</MyButton>
+        <form onSubmit={async (e)=>{
+          e.preventDefault()
+          await createAccRequest(usernameCreate,passwordCreate); 
+          setUsernameCreate('');
+          setPasswordCreate('')
+          }}>
+          <MyInput value={usernameCreate} onChange={(e)=>{setUsernameCreate(e.target.value);actualTimerId.current=e.target.value;createCheckTimer(e.target.value,1000)}} name={"username"} autoComplete={"username"} placeholder={"Username"}></MyInput>
+          <div style={usernameData.isUsable? {"color":"green"}: {"color": "red"}}>{usernameData.message}</div>
+          <MyInput value={passwordCreate} onChange={(e)=>{setPasswordCreate(e.target.value)}} name={"password"} type={"password"} autoComplete={'new-password'} placeholder={"Password"}></MyInput>
+          <MyButton type="submit">CreateAccount</MyButton>
+        </form>
       </MyModalWindow>
       <h1>Hello!</h1>
       <span>This is a home page of my project "NoteOrganizer"</span>
