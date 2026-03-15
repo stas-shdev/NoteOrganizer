@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./style.css";
 import "./styles/fonts.css"
 import MyButton from "./components/UI/MyButton/MyButton";
@@ -9,30 +9,27 @@ import MyModalWindow from "./components/UI/ModalWindow.jsx/MyModalWindow";
 import MyInput from "./components/UI/MyInput/MyInput";
 import PostGroups from "./components/PostGroups";
 import useFetching from "./useFetching";
-import { v4 as uuidv4 } from 'uuid'
-import { useAuth } from "./AuthProvider";
 import { useNavigate, Navigate } from "react-router-dom";
 import api from './api/api.js'
 import {QRCodeCanvas} from "qrcode.react"
+import MyLoadingSign from "./components/UI/LoadingSign/MyLoadingSign.jsx";
 
 function App() {
   const navigate = useNavigate()
   const [posts, setPosts] = useState([]);
 
-  const getAll = async (end) => {
+  const getAll = async () => {
     try {
       const res = await api.get("/posts")
       console.log(res)
       setPosts(res.data)
-      end()
     } catch (err) {
       if (err.response.status==401) {
         navigate("/")
       }
-      console.log(err)
     }
   }
-  const [getAllPosts, isLoadingPosts, errorPosts, completeLoading] = useFetching(() => { getAll(()=>{}) })
+  const [getAllPosts, isLoadingPosts, errorPosts ] = useFetching(getAll)
   useEffect(()=>{getAllPosts()}, [])
 
   const [flag, setStateFlag] = useState("none");
@@ -68,14 +65,6 @@ function App() {
     api.delete(`/posts?id=${idForDelete}`)
       .then(res => { console.log(res.ok) })
   };
-
-  const deleteGroup = (idForDelete) => {
-    const copyOfPosts = [...posts]
-    copyOfPosts.splice(copyOfPosts.findIndex(elem => elem.group_id == idForDelete), 1)
-    setPosts(copyOfPosts)
-    api.delete(`/group?id=${idForDelete}`)
-      .then(res => { console.log(res.ok) })
-  }
 
   const [editTitle, setEditTitle] = useState('');
   const [editBody, setEditBody] = useState('');
@@ -117,31 +106,17 @@ function App() {
     setGroupTitle("")
   }
 
-  const [editTitleGroup, setEditTitleGroup] = useState('');
-  const editGroupId = useRef('')
-  const [groupEditFlag, setGroupEditFlag] = useState("none")
 
-  const startEditGroup = (groupId, title) => {
-    setGroupEditFlag("flex");
-    editGroupId.current = groupId;
-    setEditTitleGroup(title)
-  };
-  const completeEditGroup = () => {
-    const edittedGroup = editGroupId.current;
-    const postGroupEdit = [...posts];
-    postGroupEdit[postGroupEdit.findIndex(group => group.group_id === edittedGroup)].group_title = editTitleGroup
-    setPosts(postGroupEdit);
-    editId.current = '';
-    editGroup.current = '';
-    setGroupEditFlag("none");
-    api.put(`/group`, { group_id: edittedGroup, group_title: editTitleGroup, })
-  }
   const createInvite=async(groupId)=>{
     const link = await api.post('/createInviteLink',{invitedGroupId: groupId})
     setInviteLink(process.env.REACT_APP_INVITE_ADRESS+link.data.createdLink)
   }
   const [inviteLink, setInviteLink]= useState()
   const [inviteFlag, setInviteFlag] = useState('none')
+  const [generateInviteLink, isInviteLinkLoading]=useFetching(createInvite)
+  const navigateToGroup=(idOfGroup)=>{
+    navigate(`/App/Group/${idOfGroup}`)
+  }
   return (
     <div className="App">
       <MyModalWindow flag={flag} setFlag={(flag) => { setStateFlag(flag) }}>
@@ -159,17 +134,13 @@ function App() {
         <MyButton onClick={createNewGroup}>Create group</MyButton>
       </MyModalWindow>
 
-      <MyModalWindow flag={groupEditFlag} setFlag={(flag) => { setGroupEditFlag(flag) }}>
-        <MyInput value={editTitleGroup} onChange={(e) => { setEditTitleGroup(e.target.value) }}></MyInput>
-        <MyButton onClick={completeEditGroup}>Change title of group</MyButton>
-      </MyModalWindow>
-
-      <MyModalWindow flag={inviteFlag} setFlag={(flag)=>{setInviteFlag(flag)}}>
+      <MyModalWindow flag={inviteFlag} setFlag={(flag)=>{setInviteFlag(flag); setInviteLink(null)}}>
+        {isInviteLinkLoading?<MyLoadingSign>Invite link is loading</MyLoadingSign>:<div>
         <div style={{padding: "20px", backgroundColor: "white", borderRadius: "20px"}}>
         <QRCodeCanvas value={inviteLink}/>
         </div>
-        or
-        <MyButton onClick={()=>{navigator.clipboard.writeText(inviteLink)}}>click to copy link</MyButton>
+        <div>or</div>
+        <MyButton onClick={()=>{navigator.clipboard.writeText(inviteLink)}}>click to copy link</MyButton></div>}
       </MyModalWindow>
 
       <MyButton onClick={() => { setCreateGroupFlag("flex") }}>Create New Group</MyButton>
@@ -185,17 +156,15 @@ function App() {
         searchValue={search}
         searchFunction={(e) => { setSearch(e.target.value) }} />
 
+      {isLoadingPosts?<MyLoadingSign>Posts Is Loading</MyLoadingSign>:
       <PostGroups
         postGroups={searchedSortedPosts}
-        deleteGroup={(id) => { deleteGroup(id) }}
         deleteFunc={(givenId, givenGroup) => { deletePost(givenId, givenGroup) }}
-        editFunc={(idForEdit, indexGroup, title, body) => { editPost(idForEdit, indexGroup, title, body) }}
-        editGroupFunc={(id, title) => { startEditGroup(id, title) }}
         createPost={(index) => { startCreateNewPost(index) }}
         isLoads={isLoadingPosts}
-        completeLoading={completeLoading}
-        createInvite={(id)=>{setInviteFlag('flex');createInvite(id)}}>
-      </PostGroups>
+        createInvite={(id)=>{generateInviteLink(id); setInviteFlag('flex');}}
+        navigateToGroup={id=>{navigateToGroup(id)}}>
+      </PostGroups>}
     </div>
   )
 }

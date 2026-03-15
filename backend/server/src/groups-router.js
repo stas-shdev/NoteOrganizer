@@ -1,7 +1,27 @@
 const Router = require('../framework/Router.js')
 const router = new Router()
 const db = require('../db.js')
-
+router.get('/group', (req,res)=>{
+  const idGroup=req.query.id
+  db.get(`
+  select json_object('groupId',groupId, 'groupTitle', groupTitle, 'users', json(users)) as 'response' from (select groups.id as 'groupId', groups.title as 'groupTitle', json_group_array(
+  json_object(
+    'userId', logins.id,
+    'username', logins.username
+  )
+) as users from usersGroups
+left join groups on groups.id=usersGroups.groupId
+left join logins on logins.id=usersGroups.userId
+where usersGroups.groupId=? and exists(select 1 from usersGroups where usersGroups.userId=?)
+group by usersGroups.groupId);`,[idGroup, req.user],(err,row)=>{
+    if (err||!row) {
+      res.writeHead(404)
+      res.end()
+    } else {
+      res.end(row.response)
+    }
+  })
+})
 router.post('/group', (req, res) => {
   const serverId = crypto.randomUUID()
   let body = req.body

@@ -5,6 +5,7 @@ import HomePage from './HomePage'
 import AuthProvider from './AuthProvider.js'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import InviteGroup from './InviteGroup.js';
+import Group from'./Group.js'
 // import reportWebVitals from './reportWebVitals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -13,8 +14,9 @@ root.render(
     <AuthProvider>
       <Routes>
         <Route path={"/App"} element={<App key="App"/>} />
+        <Route path={"/App/Group/:id"} element={<Group key="Group"/>} />
         <Route path={"/"} element={<HomePage key="Home"/>} />
-        <Route path={"/InviteGroup/:id"} element={<InviteGroup key="group123"/>} />
+        <Route path={"/InviteGroup/:id"} element={<InviteGroup key="InviteGroup"/>} />
       </Routes>
     </AuthProvider>
   </BrowserRouter>

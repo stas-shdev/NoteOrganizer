@@ -8,7 +8,7 @@ router.post("/createInviteLink", (req, res) => {
       const invitedGroupId = row.groupId
       res.send({ createdLink: createToken({ groupId: invitedGroupId }, 300) })
     } else {
-      res.statusCode(404)
+      res.statusCode=404
       res.send({ message: 404 })
     }
   })

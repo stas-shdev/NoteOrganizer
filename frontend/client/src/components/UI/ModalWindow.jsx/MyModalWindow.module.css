@@ -19,6 +19,9 @@
   justify-content: center;
   align-items: center;
 }
+.modalContent *{
+  margin-bottom: 3px;
+}
 
 @media(max-width:800px) {
   .modal {
