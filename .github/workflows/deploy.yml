@@ -25,11 +25,11 @@ jobs:
 
     - name: import docker-compose file
       run: |
-        mkdir -p /opt/NoteOrganizer
-        rsync -av --delete ./docker-compose.yml /opt/NoteOrganizer
+        mkdir -p ~/NoteOrganizer
+        rsync -av --delete ./docker-compose.yml ~/NoteOrganizer
     - name: insert jwt-token secrets
       run: |
-        cd /opt/NoteOrganizer
+        cd ~/NoteOrganizer
         echo "JWT_SECRET=${{secrets.JWT_SECRET}}" > .env
   deploy:
     runs-on: self-hosted
@@ -37,7 +37,7 @@ jobs:
     needs: 
       [build,preparing_for_deploy]
     steps:
-    - name: Pull and Up Docker-image
+    - name: Up Docker-compose
       run: |
-        cd /opt/NoteOrganizer
+        cd ~/NoteOrganizer
         docker-compose up -d --build
