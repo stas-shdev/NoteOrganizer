@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   backend:
-    image: stasshdev/noteorganizer-backend
+    build: ./stasshdev/noteorganizer-backend
     environment:
       JWT_SECRET: ${JWT_SECRET}
     container_name: backend
@@ -13,7 +13,7 @@ services:
   
 
   frontend:
-    image: stasshdev/noteorganizer-frontend
+    build: ./stasshdev/noteorganizer-frontend
     container_name: frontend
     ports:
       - "80:80"

@@ -14,24 +14,31 @@ jobs:
     - name: Build the Docker image(frontend)
       run: docker build -t ${{secrets.DOCKER_USER}}/noteorganizer-frontend ./frontend
 
-    - name: Push the Docker image(frontend)
-      run: docker push ${{secrets.DOCKER_USER}}/noteorganizer-frontend
-
     - name: Build the Docker image(backend)
       run: docker build -t ${{secrets.DOCKER_USER}}/noteorganizer-backend ./backend
 
-    - name: Push the Docker image(backend)
-      run: docker push ${{secrets.DOCKER_USER}}/noteorganizer-backend
-    
+  preparing_for_deploy:
+    runs-on: self-hosted
+    environment: deploy
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: import docker-compose file
+      run: |
+        mkdir -p /opt/NoteOrganizer
+        rsync -av --delete ./docker-compose.yml /opt/NoteOrganizer
+    - name: insert jwt-token secrets
+      run: |
+        cd /opt/NoteOrganizer
+        echo "JWT_SECRET=${{secrets.JWT_SECRET}}" > .env
   deploy:
     runs-on: self-hosted
     environment: deploy
-    needs: build
+    needs: 
+      build
+      preparing_for_deploy
     steps:
     - name: Pull and Up Docker-image
-      env: 
-        JWT_SECRET: ${{secrets.JWT_SECRET}}
       run: |
-        cd ~/AppTest
-        docker-compose pull
-        docker-compose up -d
+        cd /opt/NoteOrganizer
+        docker-compose up -d --build
