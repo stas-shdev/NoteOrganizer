@@ -35,8 +35,7 @@ jobs:
     runs-on: self-hosted
     environment: deploy
     needs: 
-      build
-      preparing_for_deploy
+      [build,preparing_for_deploy]
     steps:
     - name: Pull and Up Docker-image
       run: |
